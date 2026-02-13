@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
         browser: [chromium, firefox, webkit]
     
     steps:
@@ -69,7 +69,7 @@ jobs:
   smoke-tests:
     name: Smoke Tests (Quick Check)
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: 📥 Checkout code
@@ -104,7 +104,7 @@ jobs:
   security-tests:
     name: Security Tests
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: 📥 Checkout code
@@ -142,7 +142,7 @@ jobs:
   regression-tests:
     name: Full Regression Suite
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
@@ -184,7 +184,7 @@ jobs:
     name: Test Results Summary
     if: always()
     needs: [test, smoke-tests, security-tests]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: 📋 Download all artifacts
