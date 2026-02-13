@@ -117,9 +117,9 @@ public class LoginTests : BaseTest
     [Test]
     [Category("Security")]
     [Description("Verify SQL injection attempts are blocked")]
-    [TestCase("' OR '1'='1")]
-    [TestCase("admin'--")]
-    [TestCase("' OR 1=1--")]
+    [TestCase("' OR '1'='1", TestName = "Test_SQLInjection_IsBlocked_OR_Statement")]
+    [TestCase("admin'--", TestName = "Test_SQLInjection_IsBlocked_Admin_Comment")]
+    [TestCase("' OR 1=1--", TestName = "Test_SQLInjection_IsBlocked_OR_Tautology")]
     public async Task Test_SQLInjection_IsBlocked(string maliciousInput)
     {
         // Arrange
@@ -137,8 +137,8 @@ public class LoginTests : BaseTest
     [Test]
     [Category("Security")]
     [Description("Verify XSS attempts are blocked")]
-    [TestCase("<script>alert('XSS')</script>")]
-    [TestCase("<img src=x onerror=alert('XSS')>")]
+    [TestCase("<script>alert('XSS')</script>", TestName = "Test_XSS_IsBlocked_Script_Tag")]
+    [TestCase("<img src=x onerror=alert('XSS')>", TestName = "Test_XSS_IsBlocked_Image_OnError")]
     public async Task Test_XSS_IsBlocked(string maliciousInput)
     {
         // Arrange
