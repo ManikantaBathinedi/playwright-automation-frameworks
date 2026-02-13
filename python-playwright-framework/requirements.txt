@@ -1,0 +1,16 @@
+# Playwright and Test Framework
+pytest==7.4.3
+pytest-playwright==0.4.3
+pytest-xdist==3.5.0  # For parallel execution
+pytest-html==4.1.1   # For HTML reports
+pytest-rerunfailures==12.0  # For test retry on failure
+playwright==1.40.0
+
+# Utilities
+python-dotenv==1.0.0
+faker==20.1.0        # For test data generation
+requests==2.31.0     # For API testing
+
+# Logging and reporting
+pytest-json-report==1.5.0
+allure-pytest==2.13.2  # Optional: For Allure reports

@@ -1,0 +1,166 @@
+name: Playwright Python Tests CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'  # Run tests daily at 2 AM UTC
+
+jobs:
+  test:
+    name: Playwright Python Tests
+    timeout-minutes: 60
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11', '3.12']
+        browser: [chromium, firefox, webkit]
+        exclude:
+          # WebKit on Windows can be flaky
+          - os: windows-latest
+            browser: webkit
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./python-playwright-framework
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Browsers
+        working-directory: ./python-playwright-framework
+        run: playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Create reports directory
+        working-directory: ./python-playwright-framework
+        run: mkdir -p reports/screenshots reports/logs
+
+      - name: Run Playwright tests
+        working-directory: ./python-playwright-framework
+        run: pytest --browser=${{ matrix.browser }} -v
+        env:
+          CI: true
+          HEADLESS: true
+          BASE_URL: ${{ secrets.BASE_URL || 'https://demo.playwright.dev/todomvc' }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL || 'test@example.com' }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD || 'Test@123' }}
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.os }}-python${{matrix.python-version}}-${{ matrix.browser }}
+          path: python-playwright-framework/reports/
+          retention-days: 30
+
+      - name: Upload Screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots-${{ matrix.os }}-python${{matrix.python-version}}-${{ matrix.browser }}
+          path: python-playwright-framework/reports/screenshots/
+          retention-days: 7
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-python${{matrix.python-version}}-${{ matrix.browser }}
+          path: python-playwright-framework/reports/test-results.json
+          retention-days: 30
+
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./python-playwright-framework
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Browsers
+        working-directory: ./python-playwright-framework
+        run: playwright install chromium
+
+      - name: Run Smoke Tests
+        working-directory: ./python-playwright-framework
+        run: pytest -m smoke -v
+        env:
+          CI: true
+          HEADLESS: true
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test-report
+          path: python-playwright-framework/reports/
+          retention-days: 14
+
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./python-playwright-framework
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright
+        working-directory: ./python-playwright-framework
+        run: playwright install
+
+      - name: Run API Tests
+        working-directory: ./python-playwright-framework
+        run: pytest -m api -v
+        env:
+          CI: true
+          API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://jsonplaceholder.typicode.com' }}
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-test-report
+          path: python-playwright-framework/reports/
+          retention-days: 14
+

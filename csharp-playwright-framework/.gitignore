@@ -1,0 +1,74 @@
+## .NET Build artifacts
+bin/
+obj/
+/packages/
+runtimes/
+.vs/
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+## Playwright specific
+screenshots/
+videos/
+traces/
+logs/
+
+## User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build Results of an ATL Project
+[Dd]ebugPS/
+[Rr]eleasePS/
+dlldata.c
+
+# Visual Studio cache files
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Others
+ClientBin/
+~$*
+*~
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# ReSharper artifacts
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NUnit Test Results
+test-results/
+*.VisualState.xml
+
+# Playwright
+.playwright/
+
+# Rider
+.idea/
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment files with secrets
+appsettings.local.json
+*.secrets.json

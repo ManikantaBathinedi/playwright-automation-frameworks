@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Pytest
+.pytest_cache/
+.tox/
+
+# Reports (will be generated in container)
+reports/
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# CI/CD (not needed in container)
+.github/
+azure-pipelines*.yml
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore

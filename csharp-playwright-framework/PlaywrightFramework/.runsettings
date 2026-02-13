@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Maximum number of test assemblies to run in parallel -->
+    <MaxCpuCount>1</MaxCpuCount>
+    
+    <!-- Timeout for each test in milliseconds -->
+    <TestSessionTimeout>600000</TestSessionTimeout>
+    
+    <!-- Execution thread apartment state -->
+    <ExecutionThreadApartmentState>STA</ExecutionThreadApartmentState>
+  </RunConfiguration>
+
+  <!-- NUnit adapter settings -->
+  <NUnit>
+    <!-- Workers for parallel test execution -->
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+    
+    <!-- Where to look for tests -->
+    <Where>cat == Smoke || cat == Regression</Where>
+    
+    <!-- Default timeout for tests (ms) -->
+    <DefaultTimeout>60000</DefaultTimeout>
+    
+    <!-- Apartment state -->
+    <DefaultTestNamePattern>{m}{a}</DefaultTestNamePattern>
+    
+    <!-- Randomize test execution -->
+    <RandomSeed>0</RandomSeed>
+  </NUnit>
+
+  <!-- Logger settings -->
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True" />
+      <Logger friendlyName="trx" enabled="True">
+        <Configuration>
+          <LogFileName>test-results.trx</LogFileName>
+        </Configuration>
+      </Logger>
+      <Logger friendlyName="html" enabled="True">
+        <Configuration>
+          <LogFileName>test-results.html</LogFileName>
+        </Configuration>
+      </Logger>
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>

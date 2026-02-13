@@ -1,0 +1,304 @@
+trigger:
+  branches:
+    include:
+    - main
+    - master
+    - develop
+  paths:
+    include:
+    - 06_Playwright_Framework_CSharp/**
+
+pr:
+  branches:
+    include:
+    - main
+    - master
+    - develop
+
+variables:
+  dotnetVersion: '8.0.x'
+  buildConfiguration: 'Release'
+  testEnvironment: 'qa'
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build and Restore'
+    steps:
+    - task: UseDotNet@2
+      displayName: '🔧 Install .NET $(dotnetVersion)'
+      inputs:
+        version: $(dotnetVersion)
+        packageType: sdk
+
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Restore NuGet packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+        feedsToUse: 'select'
+
+    - task: DotNetCoreCLI@2
+      displayName: '🔨 Build project'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+    - task: PowerShell@2
+      displayName: '🎭 Install Playwright browsers'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd PlaywrightFramework/bin/$(buildConfiguration)/net8.0
+          pwsh playwright.ps1 install --with-deps
+        workingDirectory: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp'
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish build artifacts'
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp/PlaywrightFramework/bin/$(buildConfiguration)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: Test
+  displayName: 'Test Stage'
+  dependsOn: Build
+  jobs:
+  
+  - job: SmokeTests
+    displayName: '🚀 Smoke Tests'
+    timeoutInMinutes: 15
+    steps:
+    - task: UseDotNet@2
+      displayName: '🔧 Install .NET $(dotnetVersion)'
+      inputs:
+        version: $(dotnetVersion)
+        packageType: sdk
+
+    - task: DownloadBuildArtifacts@1
+      displayName: '📥 Download build artifacts'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Restore packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: PowerShell@2
+      displayName: '🎭 Install Playwright Chromium'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd PlaywrightFramework/bin/$(buildConfiguration)/net8.0
+          pwsh playwright.ps1 install chromium --with-deps
+        workingDirectory: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp'
+
+    - task: DotNetCoreCLI@2
+      displayName: '🧪 Run Smoke Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*.csproj'
+        arguments: '--filter "Category=Smoke" --configuration $(buildConfiguration) --logger trx --logger "console;verbosity=detailed" --results-directory $(Common.TestResultsDirectory)/Smoke'
+      env:
+        TEST_ENV: $(testEnvironment)
+      continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: '📊 Publish smoke test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/Smoke/*.trx'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        mergeTestResults: true
+        testRunTitle: 'Smoke Tests - $(Build.BuildNumber)'
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish smoke test artifacts'
+      condition: always()
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp/PlaywrightFramework/screenshots'
+        ArtifactName: 'smoke-test-screenshots'
+        publishLocation: 'Container'
+
+  - job: SecurityTests
+    displayName: '🔒 Security Tests'
+    timeoutInMinutes: 20
+    steps:
+    - task: UseDotNet@2
+      displayName: '🔧 Install .NET $(dotnetVersion)'
+      inputs:
+        version: $(dotnetVersion)
+        packageType: sdk
+
+    - task: DownloadBuildArtifacts@1
+      displayName: '📥 Download build artifacts'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Restore packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: PowerShell@2
+      displayName: '🎭 Install Playwright browsers'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd PlaywrightFramework/bin/$(buildConfiguration)/net8.0
+          pwsh playwright.ps1 install chromium --with-deps
+        workingDirectory: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp'
+
+    - task: DotNetCoreCLI@2
+      displayName: '🧪 Run Security Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*.csproj'
+        arguments: '--filter "Category=Security" --configuration $(buildConfiguration) --logger trx --logger "console;verbosity=detailed" --results-directory $(Common.TestResultsDirectory)/Security'
+      env:
+        TEST_ENV: $(testEnvironment)
+      continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: '📊 Publish security test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/Security/*.trx'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        mergeTestResults: true
+        testRunTitle: 'Security Tests - $(Build.BuildNumber)'
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish security test artifacts'
+      condition: always()
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp/PlaywrightFramework/traces'
+        ArtifactName: 'security-test-traces'
+        publishLocation: 'Container'
+
+  - job: RegressionTests
+    displayName: '🔄 Full Regression Suite'
+    timeoutInMinutes: 60
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    steps:
+    - task: UseDotNet@2
+      displayName: '🔧 Install .NET $(dotnetVersion)'
+      inputs:
+        version: $(dotnetVersion)
+        packageType: sdk
+
+    - task: DownloadBuildArtifacts@1
+      displayName: '📥 Download build artifacts'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Restore packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: PowerShell@2
+      displayName: '🎭 Install Playwright browsers'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd PlaywrightFramework/bin/$(buildConfiguration)/net8.0
+          pwsh playwright.ps1 install --with-deps
+        workingDirectory: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp'
+
+    - task: DotNetCoreCLI@2
+      displayName: '🧪 Run All Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --logger trx --logger "html;LogFileName=test-report.html" --results-directory $(Common.TestResultsDirectory)/Regression'
+      env:
+        TEST_ENV: staging
+      continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: '📊 Publish regression test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/Regression/*.trx'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        mergeTestResults: true
+        testRunTitle: 'Regression Tests - $(Build.BuildNumber)'
+        failTaskOnFailedTests: false
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish test reports'
+      condition: always()
+      inputs:
+        PathtoPublish: '$(Common.TestResultsDirectory)'
+        ArtifactName: 'regression-test-results'
+        publishLocation: 'Container'
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish screenshots'
+      condition: always()
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp/PlaywrightFramework/screenshots'
+        ArtifactName: 'regression-screenshots'
+        publishLocation: 'Container'
+
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish traces'
+      condition: always()
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/06_Playwright_Framework_CSharp/PlaywrightFramework/traces'
+        ArtifactName: 'regression-traces'
+        publishLocation: 'Container'
+
+- stage: Report
+  displayName: 'Test Report Stage'
+  dependsOn: Test
+  condition: always()
+  jobs:
+  - job: GenerateSummary
+    displayName: '📋 Generate Test Summary'
+    steps:
+    - task: PowerShell@2
+      displayName: '📊 Display test summary'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "   TEST EXECUTION SUMMARY" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "Build Number: $(Build.BuildNumber)" -ForegroundColor Yellow
+          Write-Host "Environment: $(testEnvironment)" -ForegroundColor Yellow
+          Write-Host "Configuration: $(buildConfiguration)" -ForegroundColor Yellow
+          Write-Host ""
+          Write-Host "✅ Build and Test stages completed" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "📦 Artifacts generated:" -ForegroundColor Magenta
+          Write-Host "  - Test Results (TRX files)" -ForegroundColor White
+          Write-Host "  - Screenshots" -ForegroundColor White
+          Write-Host "  - Trace files" -ForegroundColor White
+          Write-Host "  - HTML Reports" -ForegroundColor White
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Cyan

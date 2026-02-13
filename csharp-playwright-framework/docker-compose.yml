@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  playwright-tests-csharp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: playwright-csharp-tests
+    environment:
+      - TEST_ENV=${TEST_ENV:-qa}
+      - BROWSER=${BROWSER:-chrome}
+      - HEADLESS=${HEADLESS:-true}
+    volumes:
+      # Mount TestResults directory to host
+      - ./PlaywrightFramework/TestResults:/src/PlaywrightFramework/TestResults
+      # Mount screenshots and traces
+      - ./PlaywrightFramework/screenshots:/src/PlaywrightFramework/screenshots
+      - ./PlaywrightFramework/traces:/src/PlaywrightFramework/traces
+    command: dotnet test --filter "Category=smoke" --logger:"console;verbosity=detailed" --logger:"html;LogFileName=test-results.html"
+    networks:
+      - test-network
+
+  # Service for regression tests
+  playwright-regression-csharp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: playwright-csharp-regression
+    environment:
+      - TEST_ENV=qa
+      - BROWSER=chrome
+      - HEADLESS=true
+    volumes:
+      - ./PlaywrightFramework/TestResults:/src/PlaywrightFramework/TestResults
+    command: dotnet test --filter "Category=regression" --logger:"console;verbosity=detailed"
+    networks:
+      - test-network
+    profiles:
+      - regression
+
+  # Service for API tests only
+  playwright-api-csharp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: playwright-csharp-api
+    environment:
+      - TEST_ENV=qa
+    volumes:
+      - ./PlaywrightFramework/TestResults:/src/PlaywrightFramework/TestResults
+    command: dotnet test --filter "Category=api" --logger:"console;verbosity=detailed"
+    networks:
+      - test-network
+    profiles:
+      - api
+
+networks:
+  test-network:
+    driver: bridge

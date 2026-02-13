@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-python-tests
+    environment:
+      - TEST_ENV=${TEST_ENV:-qa}
+      - BROWSER=${BROWSER:-chrome}
+      - HEADLESS=${HEADLESS:-true}
+      - WORKERS=${WORKERS:-auto}
+    volumes:
+      # Mount reports directory to host for access after test run
+      - ./reports:/app/reports
+      # Mount test-data if needed
+      - ./test-data:/app/test-data
+    command: pytest -v -m smoke --html=reports/html-report/index.html --self-contained-html
+    networks:
+      - test-network
+
+  # Optional: Add a service for running specific test suites
+  playwright-regression:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-regression-tests
+    environment:
+      - TEST_ENV=qa
+      - BROWSER=chrome
+      - HEADLESS=true
+      - WORKERS=4
+    volumes:
+      - ./reports:/app/reports
+    command: pytest -v -m regression --maxfail=3
+    networks:
+      - test-network
+    profiles:
+      - regression  # Only run when explicitly specified
+
+  # Optional: Add a service for API tests only
+  playwright-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-api-tests
+    environment:
+      - TEST_ENV=qa
+    volumes:
+      - ./reports:/app/reports
+    command: pytest -v -m api
+    networks:
+      - test-network
+    profiles:
+      - api
+
+networks:
+  test-network:
+    driver: bridge

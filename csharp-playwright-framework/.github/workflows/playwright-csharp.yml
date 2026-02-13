@@ -1,0 +1,202 @@
+name: Playwright C# Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:  # Manual trigger
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} - ${{ matrix.browser }}
+    timeout-minutes: 60
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 📦 Restore dependencies
+      run: dotnet restore PlaywrightFramework/PlaywrightFramework.csproj
+
+    - name: 🔨 Build project
+      run: dotnet build PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-restore
+
+    - name: 🎭 Install Playwright browsers
+      run: pwsh PlaywrightFramework/bin/Release/net8.0/playwright.ps1 install --with-deps
+
+    - name: 🧪 Run tests
+      env:
+        BROWSER: ${{ matrix.browser }}
+        TEST_ENV: qa
+      run: dotnet test PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=detailed"
+
+    - name: 📊 Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.browser }}
+        path: |
+          **/TestResults/**/*.trx
+          **/screenshots/**
+          **/traces/**
+          **/videos/**
+        retention-days: 30
+
+    - name: 📈 Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results - ${{ matrix.os }} - ${{ matrix.browser }}
+        path: '**/TestResults/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: false
+
+  smoke-tests:
+    name: Smoke Tests (Quick Check)
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 📦 Restore and Build
+      run: |
+        dotnet restore PlaywrightFramework/PlaywrightFramework.csproj
+        dotnet build PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-restore
+
+    - name: 🎭 Install Playwright Chromium only
+      run: pwsh PlaywrightFramework/bin/Release/net8.0/playwright.ps1 install chromium --with-deps
+
+    - name: 🚀 Run Smoke Tests
+      env:
+        TEST_ENV: qa
+      run: dotnet test PlaywrightFramework/PlaywrightFramework.csproj --filter "Category=Smoke" --configuration Release --no-build --logger "trx"
+
+    - name: 📊 Upload smoke test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: smoke-test-results
+        path: '**/TestResults/**'
+        retention-days: 7
+
+  security-tests:
+    name: Security Tests
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 📦 Restore and Build
+      run: |
+        dotnet restore PlaywrightFramework/PlaywrightFramework.csproj
+        dotnet build PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-restore
+
+    - name: 🎭 Install Playwright browsers
+      run: pwsh PlaywrightFramework/bin/Release/net8.0/playwright.ps1 install chromium --with-deps
+
+    - name: 🔒 Run Security Tests
+      env:
+        TEST_ENV: qa
+      run: dotnet test PlaywrightFramework/PlaywrightFramework.csproj --filter "Category=Security" --configuration Release --no-build --logger "trx"
+
+    - name: 📊 Upload security test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-test-results
+        path: |
+          **/TestResults/**
+          **/screenshots/**
+          **/traces/**
+        retention-days: 30
+
+  regression-tests:
+    name: Full Regression Suite
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 📦 Restore and Build
+      run: |
+        dotnet restore PlaywrightFramework/PlaywrightFramework.csproj
+        dotnet build PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-restore
+
+    - name: 🎭 Install Playwright browsers
+      run: pwsh PlaywrightFramework/bin/Release/net8.0/playwright.ps1 install --with-deps
+
+    - name: 🔄 Run Full Test Suite
+      env:
+        TEST_ENV: staging
+      run: dotnet test PlaywrightFramework/PlaywrightFramework.csproj --configuration Release --no-build --logger "trx;LogFileName=regression-results.trx" --logger "html;LogFileName=regression-report.html"
+
+    - name: 📊 Upload regression results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: regression-test-results
+        path: |
+          **/TestResults/**
+          **/screenshots/**
+          **/traces/**
+          **/videos/**
+          **/logs/**
+        retention-days: 60
+
+  test-summary:
+    name: Test Results Summary
+    if: always()
+    needs: [test, smoke-tests, security-tests]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📋 Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: all-test-results
+
+    - name: 📊 Display summary
+      run: |
+        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All test jobs completed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+        ls -R all-test-results || echo "No artifacts found" >> $GITHUB_STEP_SUMMARY
