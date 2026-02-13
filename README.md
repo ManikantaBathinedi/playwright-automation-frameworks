@@ -65,13 +65,20 @@ This repository showcases **professional-level automation engineering skills** w
 
 ## 🚀 **Quick Start**
 
+### **New to the Project?**
+📘 **See the detailed setup guides:**
+- **Python Framework:** [GETTING_STARTED.md](python-playwright-framework/GETTING_STARTED.md)
+- **C# Framework:** [GETTING_STARTED.md](csharp-playwright-framework/GETTING_STARTED.md)
+
 ### **Python Framework**
 ```bash
-cd python-playwright-framework
+# Clone repository
+git clone https://github.com/ManikantaBathinedi/playwright-automation-frameworks.git
+cd playwright-automation-frameworks/python-playwright-framework
 
 # Install dependencies
 pip install -r requirements.txt
-playwright install
+playwright install chromium
 
 # Run tests
 pytest tests/ -v --html=reports/report.html
@@ -80,22 +87,29 @@ pytest tests/ -v --html=reports/report.html
 pytest tests/ -v --reruns 2
 
 # Run in Docker
-cd python-playwright-framework
 docker-compose up
 ```
 
 ### **C# Framework**
 ```bash
-cd csharp-playwright-framework
+# Clone repository
+git clone https://github.com/ManikantaBathinedi/playwright-automation-frameworks.git
+cd playwright-automation-frameworks/csharp-playwright-framework
 
 # Restore packages
 dotnet restore
+
+# Build project
+dotnet build
+
+# Install Playwright browsers
+pwsh PlaywrightFramework/bin/Debug/net8.0/playwright.ps1 install chromium
 
 # Run tests
 dotnet test --logger "console;verbosity=detailed"
 
 # Run specific category
-dotnet test --filter "Category=smoke"
+dotnet test --filter "Category=Smoke"
 
 # Run in Docker
 cd csharp-playwright-framework
@@ -134,7 +148,9 @@ playwright-automation-frameworks/
 │   ├── docker-compose.yml                    # Multi-service orchestration
 │   ├── pytest.ini                            # Pytest configuration
 │   ├── conftest.py                           # Pytest fixtures
-│   └── requirements.txt                      # Python dependencies
+│   ├── requirements.txt                      # Python dependencies
+│   ├── README.md                             # Framework documentation
+│   └── GETTING_STARTED.md                    # 📘 Step-by-step setup guide
 │
 ├── 📂 csharp-playwright-framework/          # C# Framework
 │   └── PlaywrightFramework/
@@ -161,6 +177,8 @@ playwright-automation-frameworks/
 │       │   ├── appsettings.qa.json
 │       │   └── appsettings.prod.json
 │       └── PlaywrightFramework.csproj       # Project file
+│   ├── README.md                             # Framework documentation
+│   └── GETTING_STARTED.md                    # 📘 Step-by-step setup guide
 │
 ├── 📂 .github/workflows/                     # CI/CD Pipelines
 │   ├── playwright-python.yml                # Python CI/CD
