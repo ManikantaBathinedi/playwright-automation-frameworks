@@ -16,17 +16,17 @@ class HomePage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
         
-        # Initialize locators
-        self._welcome_message = page.locator('.welcome-message, h1:has-text("Welcome"), .greeting')
-        self._logout_button = page.locator('button:has-text("Logout"), button:has-text("Sign out"), a:has-text("Logout")')
-        self._user_profile = page.locator('.user-profile, .profile-icon, [data-test="user-profile"]')
-        self._user_menu = page.locator('.user-menu, .dropdown-menu, [role="menu"]')
+        # Initialize locators for saucedemo.com
+        self._welcome_message = page.locator('.title, .app_logo, h1:has-text("Welcome"), .greeting')
+        self._logout_button = page.locator('#logout_sidebar_link, button:has-text("Logout"), button:has-text("Sign out"), a:has-text("Logout")')
+        self._user_profile = page.locator('#react-burger-menu-btn, .bm-burger-button, .user-profile, .profile-icon, [data-test="user-profile"]').first
+        self._user_menu = page.locator('.bm-menu, .user-menu, .dropdown-menu, [role="menu"]')
         self._search_box = page.locator('input[type="search"], input[placeholder*="Search"], input[name="search"]')
         self._search_button = page.locator('button[type="submit"]:has-text("Search"), button:has([aria-label="Search"])')
-        self._navigation_menu = page.locator('nav, .navigation, .navbar')
+        self._navigation_menu = page.locator('nav, .navigation, .navbar, .bm-menu')
         self._notification_bell = page.locator('.notification-icon, [aria-label="Notifications"]')
         self._settings_icon = page.locator('.settings-icon, [aria-label="Settings"]')
-        self._page_title = page.locator('h1, .page-title')
+        self._page_title = page.locator('h1, .page-title, .title')
     
     def goto(self) -> None:
         """Navigate to home page"""

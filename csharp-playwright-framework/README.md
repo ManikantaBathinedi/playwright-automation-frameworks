@@ -23,6 +23,18 @@ A production-ready Playwright automation framework using **C# + NUnit**, designe
 
 ## 🚀 Quick Start
 
+### **Step 0: Clone the Repository**
+
+```bash
+# Clone the repository
+git clone https://github.com/ManikantaBathinedi/playwright-automation-frameworks.git
+
+# Navigate to C# framework folder
+cd playwright-automation-frameworks/csharp-playwright-framework
+```
+
+---
+
 ### **Step 1: Open in Visual Studio**
 
 1. Open Visual Studio 2022 (or later)

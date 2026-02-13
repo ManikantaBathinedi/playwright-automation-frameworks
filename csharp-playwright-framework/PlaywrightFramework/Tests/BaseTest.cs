@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
+using NUnit.Framework;
 using PlaywrightFramework.Config;
 using PlaywrightFramework.Utilities;
 
@@ -10,7 +11,6 @@ namespace PlaywrightFramework.Tests;
 /// Inherits from PageTest which provides Playwright context
 /// </summary>
 [TestFixture]
-[Retry(2)]  // Retry failed tests up to 2 times
 public class BaseTest : PageTest
 {
     protected Settings Settings;
@@ -18,20 +18,30 @@ public class BaseTest : PageTest
     [SetUp]
     public async Task SetUp()
     {
-        Settings = Settings.Instance;
+        Settings = Config.Settings.Instance;
         TestLogger.TestStart(TestContext.CurrentContext.Test.Name);
         
         // Log browser being used
         var browserName = BrowserName ?? "chromium";
         TestLogger.Info($"🌐 Browser: {browserName}");
         
-        // Configure browser options
-        await Context.Tracing.StartAsync(new()
+        // Configure browser options (only for UI tests that use Context)
+        try
         {
-            Screenshots = true,
-            Snapshots = true,
-            Sources = true
-        });
+            if (Context != null)
+            {
+                await Context.Tracing.StartAsync(new()
+                {
+                    Screenshots = true,
+                    Snapshots = true,
+                    Sources = true
+                });
+            }
+        }
+        catch
+        {
+            // Context not available for API-only tests, skip tracing
+        }
     }
 
     [TearDown]
@@ -40,53 +50,43 @@ public class BaseTest : PageTest
         var testName = TestContext.CurrentContext.Test.Name;
         var testPassed = TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed;
 
-        // Take screenshot on failure
-        if (!testPassed && Settings.TakeScreenshotOnFailure)
+        try
         {
-            var screenshotPath = $"screenshots/{testName}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-            Directory.CreateDirectory("screenshots");
-            await Page.ScreenshotAsync(new() { Path = screenshotPath, FullPage = true });
-            TestLogger.Info($"Screenshot saved: {screenshotPath}");
-        }
+            // Take screenshot on failure (only for UI tests)
+            if (!testPassed && Settings.TakeScreenshotOnFailure && Page != null)
+            {
+                var screenshotPath = $"screenshots/{testName}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                Directory.CreateDirectory("screenshots");
+                await Page.ScreenshotAsync(new() { Path = screenshotPath, FullPage = true });
+                TestLogger.Info($"Screenshot saved: {screenshotPath}");
+            }
 
-        // Stop tracing
-        await Context.Tracing.StopAsync(new()
+            // Stop tracing (only if it was started)
+            if (Context != null)
+            {
+                await Context.Tracing.StopAsync(new()
+                {
+                    Path = $"traces/{testName}.zip"
+                });
+            }
+        }
+        catch
         {
-            Path = $"traces/{testName}.zip"
-        });
+            // Ignore teardown errors for API tests
+        }
 
         TestLogger.TestEnd(testName, testPassed);
-    }
-
-    /// <summary>
-    /// Override to set browser type (chromium, firefox, webkit)
-    /// Can be controlled via BROWSER environment variable
-    /// </summary>
-    public override BrowserName BrowserName
-    {
-        get
-        {
-            var browserEnv = Environment.GetEnvironmentVariable("BROWSER")?.ToLower();
-            return browserEnv switch
-            {
-                "chrome" => Microsoft.Playwright.BrowserName.Chromium, // chrome maps to chromium
-                "chromium" => Microsoft.Playwright.BrowserName.Chromium,
-                "firefox" => Microsoft.Playwright.BrowserName.Firefox,
-                "webkit" => Microsoft.Playwright.BrowserName.Webkit,
-                _ => Microsoft.Playwright.BrowserName.Chromium // default
-            };
-        }
     }
 
     public override BrowserNewContextOptions ContextOptions()
     {
         return new BrowserNewContextOptions
         {
-            BaseURL = Settings.BaseUrl,
+            BaseURL = Config.Settings.Instance.BaseUrl,
             ViewportSize = new ViewportSize { Width = 1280, Height = 720 },
             IgnoreHTTPSErrors = true,
-            RecordVideoDir = Settings.RecordVideo ? "videos/" : null,
-            RecordVideoSize = Settings.RecordVideo ? new RecordVideoSize { Width = 1280, Height = 720 } : null
+            RecordVideoDir = Config.Settings.Instance.RecordVideo ? "videos/" : null,
+            RecordVideoSize = Config.Settings.Instance.RecordVideo ? new RecordVideoSize { Width = 1280, Height = 720 } : null
         };
     }
 }

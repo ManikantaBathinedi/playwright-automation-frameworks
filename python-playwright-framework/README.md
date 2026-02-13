@@ -166,6 +166,16 @@ utils/
 - VS Code (recommended)
 - Git
 
+### **Step 0: Clone the Repository**
+
+```bash
+# Clone the repository
+git clone https://github.com/ManikantaBathinedi/playwright-automation-frameworks.git
+
+# Navigate to Python framework folder
+cd playwright-automation-frameworks/python-playwright-framework
+```
+
 ### **Step 1: Install Dependencies**
 ```bash
 cd 06_Playwright_Framework

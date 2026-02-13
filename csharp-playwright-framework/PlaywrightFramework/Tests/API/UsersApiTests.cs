@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Playwright;
+using NUnit.Framework;
 using PlaywrightFramework.Utilities;
 
 namespace PlaywrightFramework.Tests.API;
@@ -16,7 +17,7 @@ public class UsersApiTests : BaseTest
     [SetUp]
     public new async Task SetUp()
     {
-        await base.SetUp();
+        // Base SetUp is called automatically by NUnit
         _apiBaseUrl = Settings.ApiBaseUrl;
 
         // Create API request context
@@ -30,7 +31,7 @@ public class UsersApiTests : BaseTest
             }
         });
 
-        TestLogger.Api($"API Base URL: {_apiBaseUrl}");
+        TestLogger.Info($"API Base URL: {_apiBaseUrl}");
     }
 
     [TearDown]
@@ -244,9 +245,9 @@ public class UsersApiTests : BaseTest
 
         // Assert
         // Most APIs return 400 Bad Request or 422 Unprocessable Entity
-        response.Status.Should().BeOneOf(400, 422, 201, "Should return validation error or be lenient");
+        response.Status.Should().BeOneOf(400, 422, 201);
 
-        TestLogger.Info($"Response status: {response.Status}");
+        TestLogger.Info($"Response status: {response.Status} - Should return validation error or be lenient");
     }
 
     [Test]

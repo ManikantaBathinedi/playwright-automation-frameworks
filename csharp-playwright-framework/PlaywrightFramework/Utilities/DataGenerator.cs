@@ -35,7 +35,7 @@ public static class DataGenerator
 
     // Passwords
     public static string RandomPassword(int length = 12) => Faker.Internet.Password(length);
-    public static string StrongPassword() => Faker.Internet.Password(16, memorable: false, prefix: "Aa1!");
+    public static string GenerateStrongPassword() => Faker.Internet.Password(16, memorable: false, prefix: "Aa1!");
 
     // Phone
     public static string RandomPhoneNumber() => Faker.Phone.PhoneNumber();
@@ -65,26 +65,12 @@ public static class DataGenerator
             FirstName = RandomFirstName(),
             LastName = RandomLastName(),
             Email = RandomEmail(),
-            Password = StrongPassword(),
-            PhoneNumber = RandomPhoneNumber(),
+            Password = GenerateStrongPassword(),
+            Phone = RandomPhoneNumber(),
             Address = RandomAddress(),
             City = RandomCity(),
             ZipCode = RandomZipCode(),
             Country = RandomCountry()
         };
     }
-}
-
-public class User
-{
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string PhoneNumber { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string ZipCode { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
-    public string FullName => $"{FirstName} {LastName}";
 }

@@ -17,10 +17,11 @@ public class LoginPage : BasePage
 
     public LoginPage(IPage page) : base(page)
     {
-        _emailInput = page.Locator("#email, input[type='email'], input[name='email']");
+        // Updated for saucedemo.com compatibility
+        _emailInput = page.Locator("#user-name, #email, input[type='email'], input[name='email'], input[name='user-name']");
         _passwordInput = page.Locator("#password, input[type='password'], input[name='password']");
-        _loginButton = page.Locator("button[type='submit'], button:has-text('Login'), button:has-text('Sign in')");
-        _errorMessage = page.Locator(".error-message, .alert-danger, [role='alert']");
+        _loginButton = page.Locator("#login-button, button[type='submit'], button:has-text('Login'), button:has-text('Sign in')");
+        _errorMessage = page.Locator("[data-test='error'], .error-message, .alert-danger, [role='alert']");
         _rememberMeCheckbox = page.Locator("#remember-me, input[type='checkbox'][name='remember']");
         _forgotPasswordLink = page.Locator("a:has-text('Forgot'), a[href*='forgot']");
     }
@@ -28,7 +29,8 @@ public class LoginPage : BasePage
     // Actions
     public async Task GotoAsync(string baseUrl)
     {
-        await NavigateAsync($"{baseUrl}/login");
+        // saucedemo.com login is on homepage, not /login
+        await NavigateAsync(baseUrl);
         await WaitForPageLoadAsync();
     }
 

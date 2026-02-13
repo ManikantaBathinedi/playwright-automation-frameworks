@@ -35,7 +35,7 @@ public class ProductPage : BasePage
     public async Task GotoAsync(string url)
     {
         await NavigateAsync(url);
-        await WaitForLoadStateAsync("networkidle");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class ProductPage : BasePage
     /// </summary>
     public async Task AddProductToCartByNameAsync(string productName)
     {
-        var product = _page.Locator($"text={productName}").First;
+        var product = Page.Locator($"text={productName}").First;
         var addButton = product.Locator("..").Locator("button:has-text('Add to Cart')").First;
         await addButton.ClickAsync();
         await WaitAsync(500);
@@ -113,7 +113,7 @@ public class ProductPage : BasePage
     public async Task FilterByCategoryAsync(string category)
     {
         await _filterDropdown.SelectOptionAsync(category);
-        await WaitForLoadStateAsync("networkidle");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class ProductPage : BasePage
     public async Task SortProductsAsync(string sortOption)
     {
         await _sortDropdown.SelectOptionAsync(sortOption);
-        await WaitForLoadStateAsync("networkidle");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public class ProductPage : BasePage
     {
         await _searchBox.FillAsync(searchTerm);
         await _searchBox.PressAsync("Enter");
-        await WaitForLoadStateAsync("networkidle");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     /// <summary>

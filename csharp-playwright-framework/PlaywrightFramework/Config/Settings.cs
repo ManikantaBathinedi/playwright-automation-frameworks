@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Configuration;
 
 namespace PlaywrightFramework.Config;
@@ -14,22 +15,22 @@ public class Settings
     private Settings()
     {
         // Get environment from TEST_ENV (default: dev)
-        var environment = Environment.GetEnvironmentVariable("TEST_ENV") ?? "dev";
+        var environment = System.Environment.GetEnvironmentVariable("TEST_ENV") ?? "dev";
 
         _configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(System.IO.Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();
 
-        Console.WriteLine("============================================================");
-        Console.WriteLine($"✅ Environment: {environment.ToUpper()}");
-        Console.WriteLine($"📄 Config file: appsettings.{environment}.json");
-        Console.WriteLine($"📍 BASE_URL: {BaseUrl}");
-        Console.WriteLine($"🖥️  HEADLESS: {Headless}");
-        Console.WriteLine($"👥 WORKERS: {MaxWorkers}");
-        Console.WriteLine("============================================================\n");
+        System.Console.WriteLine("============================================================");
+        System.Console.WriteLine($"✅ Environment: {environment.ToUpper()}");
+        System.Console.WriteLine($"📄 Config file: appsettings.{environment}.json");
+        System.Console.WriteLine($"📍 BASE_URL: {BaseUrl}");
+        System.Console.WriteLine($"🖥️  HEADLESS: {Headless}");
+        System.Console.WriteLine($"👥 WORKERS: {MaxWorkers}");
+        System.Console.WriteLine("============================================================\n");
     }
 
     public static Settings Instance

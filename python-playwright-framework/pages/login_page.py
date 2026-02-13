@@ -10,19 +10,19 @@ from pages.base_page import BasePage
 class LoginPage(BasePage):
     """Login page object model"""
     
-    # Page URL
-    LOGIN_URL = "/login"
+    # Page URL - saucedemo login is on homepage
+    LOGIN_URL = "/"
     
     def __init__(self, page: Page):
         super().__init__(page)
         
-        # Initialize locators
-        self._email_input = page.locator('input[name="email"], input[type="email"], input#email')
-        self._password_input = page.locator('input[name="password"], input[type="password"], input#password')
-        self._login_button = page.locator('button:has-text("Login"), button[type="submit"]:has-text("Sign in"), button#login-button')
+        # Initialize locators for saucedemo.com
+        self._email_input = page.locator('#user-name, input[name="username"], input[name="email"], input[type="email"], input#email')
+        self._password_input = page.locator('#password, input[name="password"], input[type="password"]')
+        self._login_button = page.locator('#login-button, button:has-text("Login"), button[type="submit"]:has-text("Sign in")')
         self._signup_link = page.locator('a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")')
         self._forgot_password_link = page.locator('a:has-text("Forgot"), a:has-text("Reset password")')
-        self._error_message = page.locator('.error-message, .alert-danger, [role="alert"]')
+        self._error_message = page.locator('[data-test="error"], .error-message, .alert-danger, [role="alert"]')
         self._success_message = page.locator('.success-message, .alert-success')
         self._remember_me_checkbox = page.locator('input[type="checkbox"][name="remember"], input#remember-me')
         self._show_password_button = page.locator('button:has-text("Show"), [aria-label="Show password"]')

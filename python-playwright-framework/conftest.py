@@ -49,12 +49,8 @@ def pytest_addoption(parser):
         default=None,
         help="Number of parallel workers (default: from WORKERS env var or 'auto')"
     )
-    parser.addoption(
-        "--browser",
-        action="store",
-        default=None,
-        help="Browser to use: chrome, firefox, or webkit (default: from BROWSER env var or 'chrome')"
-    )
+    # Note: --browser option is already provided by pytest-playwright plugin
+    # We'll use the BROWSER env var instead to avoid conflicts
 
 
 def pytest_configure(config):
@@ -93,26 +89,19 @@ def pytest_configure(config):
             config.option.numprocesses = "auto"
     
     # ===== Configure Browser Type =====
-    cli_browser = config.getoption("--browser")
-    if cli_browser:
-        browser_name = cli_browser
-        browser_source = "CLI argument"
-    else:
-        browser_name = os.getenv("BROWSER", "chrome")
-        browser_source = "environment variable" if os.getenv("BROWSER") else "default"
+    # Browser type is managed by pytest-playwright's --browser-channel option
+    # We respect the BROWSER env var for informational purposes
+    browser_name = os.getenv("BROWSER", "chrome").lower()
+    browser_source = "environment variable" if os.getenv("BROWSER") else "default"
     
-    # Validate browser name and map 'chrome' to 'chromium'
-    browser_name = browser_name.lower()
-    if browser_name == "chrome":
-        browser_name = "chromium"
-        print(f"💡 Mapping 'chrome' to 'chromium' (Playwright's Chrome engine)")
+    # Map 'chrome' to 'chromium' for display purposes
+    display_browser = browser_name
+    if display_browser == "chrome":
+        display_browser = "chromium"
+        print(f"💡 'chrome' maps to 'chromium' (Playwright's Chrome engine)")
     
-    valid_browsers = ["chromium", "firefox", "webkit"]
-    if browser_name not in valid_browsers:
-        print(f"⚠️  Invalid browser: {browser_name}, using 'chromium'")
-        browser_name = "chromium"
-    
-    print(f"🌐 Browser configured: {browser_name} (from {browser_source})")
+    print(f"🌐 Browser preference: {display_browser} (from {browser_source})")
+    print(f"💡 Use --browser-channel=chrome for Google Chrome or just use default chromium")
 
 
 @pytest.fixture(scope="session")
@@ -141,12 +130,12 @@ def browser_type_launch_args(browser_type_launch_args):
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def base_url():
     """
-    Base URL for the application
+    Base URL for the application - overrides pytest-base-url plugin
     """
-    return os.getenv("BASE_URL", "https://demo.playwright.dev/todomvc")
+    return os.getenv("BASE_URL", "https://www.saucedemo.com")
 
 
 @pytest.fixture

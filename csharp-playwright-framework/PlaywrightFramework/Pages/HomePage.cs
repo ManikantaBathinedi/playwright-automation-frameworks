@@ -17,10 +17,11 @@ public class HomePage : BasePage
 
     public HomePage(IPage page) : base(page)
     {
-        _welcomeMessage = page.Locator(".welcome-message, h1:has-text('Welcome'), .greeting");
-        _logoutButton = page.Locator("button:has-text('Logout'), button:has-text('Sign out'), a:has-text('Logout')");
-        _userProfile = page.Locator(".user-profile, .profile-icon, [data-test='user-profile']");
-        _userMenu = page.Locator(".user-menu, .dropdown-menu, [role='menu']");
+        // Updated for saucedemo.com - looks for inventory page elements after login
+        _welcomeMessage = page.Locator(".title, .app_logo, h1:has-text('Welcome'), .greeting");
+        _logoutButton = page.Locator("#logout_sidebar_link, button:has-text('Logout'), button:has-text('Sign out'), a:has-text('Logout')");
+        _userProfile = page.Locator("#react-burger-menu-btn").Or(page.Locator(".user-profile, .profile-icon, [data-test='user-profile']"));
+        _userMenu = page.Locator(".bm-menu, .user-menu, .dropdown-menu, [role='menu']");
         _searchBox = page.Locator("input[type='search'], input[placeholder*='Search']");
         _searchButton = page.Locator("button[type='submit']:has-text('Search')");
     }

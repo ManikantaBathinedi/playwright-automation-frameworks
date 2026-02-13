@@ -1,4 +1,5 @@
 using FluentAssertions;
+using NUnit.Framework;
 using PlaywrightFramework.Pages;
 using PlaywrightFramework.Utilities;
 
@@ -14,9 +15,10 @@ public class LoginTests : BaseTest
     [SetUp]
     public new async Task SetUp()
     {
-        await base.SetUp();
+        // Base SetUp is called automatically by NUnit
         _loginPage = new LoginPage(Page);
         _homePage = new HomePage(Page);
+        await Task.CompletedTask;
     }
 
     [Test]
